@@ -5,7 +5,7 @@ import plantsRouter from "./routes/plants";
 const app = express();
 
 app.use(cors());
-app.use(express.json()); // ★これが無いとデータを受け取れません！
+app.use(express.json()); // ★これが無いとデータを受け取れない
 
 app.use("/api/plants", plantsRouter);
 

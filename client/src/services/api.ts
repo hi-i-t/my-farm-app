@@ -1,7 +1,7 @@
 import { Plant } from "../types/plant";
 
-const API_BASE_URL = "http://localhost:3001/api";
-
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 // 作物一覧を取得
 export const fetchPlants = async (): Promise<Plant[]> => {
   const response = await fetch(`${API_BASE_URL}/plants`);
