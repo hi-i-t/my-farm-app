@@ -15,11 +15,34 @@ export const getPlants = async (req: Request, res: Response) => {
 // --- POST (新規登録) ---
 export const createPlant = async (req: Request, res: Response) => {
   try {
-    const { name, type, planted_date } = req.body;
+    // ★ gridPosition, farmType, icon などを追加で受け取るようにする
+    const {
+      name,
+      type,
+      farmType,
+      gridPosition,
+      icon,
+      plantedDate,
+      harvestDate,
+      memo,
+      isArchived,
+    } = req.body;
 
     const { data, error } = await supabase
       .from("plants")
-      .insert([{ name, type, planted_date }])
+      .insert([
+        {
+          name,
+          type,
+          farm_type: farmType, // farm_type に合わせる
+          grid_position: gridPosition, // grid_position に合わせる
+          icon,
+          planted_date: plantedDate,
+          harvest_date: harvestDate,
+          memo,
+          is_archived: isArchived,
+        },
+      ])
       .select();
 
     if (error) throw error;
@@ -33,11 +56,32 @@ export const createPlant = async (req: Request, res: Response) => {
 export const updatePlant = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, type, planted_date } = req.body;
+    // 更新時も同様にすべての項目を受け取るようにする
+    const {
+      name,
+      type,
+      farmType,
+      gridPosition,
+      icon,
+      plantedDate,
+      harvestDate,
+      memo,
+      isArchived,
+    } = req.body;
 
     const { data, error } = await supabase
       .from("plants")
-      .update({ name, type, planted_date })
+      .update({
+        name,
+        type,
+        farm_type: farmType,
+        grid_position: gridPosition,
+        icon,
+        planted_date: plantedDate,
+        harvest_date: harvestDate,
+        memo,
+        isArchived,
+      })
       .eq("id", id)
       .select();
 
