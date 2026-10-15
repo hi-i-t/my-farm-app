@@ -1,79 +1,129 @@
-import React from "react";
+import React, { useRef } from "react";
 import ReactGridLayout, {
   useContainerWidth,
+  Layout,
   LayoutItem,
 } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
-import { Plant } from "../types/plant";
+import { FarmType, GridPosition, Plant } from "../types/plant";
 
 interface Props {
-  plants: Plant[];
-  farmType: "spring" | "autumn";
+  plants: Plant[]; // 表示するファームのBoxだけ渡す
+  farmType: FarmType;
   showArchived: boolean;
+  loading: boolean;
+  error: string | null;
   onSelectBox: (plant: Plant) => void;
   onAddBox: () => void;
-  onSwitchFarm: (type: "spring" | "autumn") => void;
+  onSwitchFarm: (type: FarmType) => void;
   onToggleArchive: () => void;
   onGoToTop: () => void;
-  onLayoutChange?: (newLayout: readonly LayoutItem[]) => void;
+  onLayoutSave: (positions: Record<string, GridPosition>) => void;
 }
+
+const COLS = 4;
+
+// gridPosition から React-Grid-Layout 用のレイアウトを作る
+// 位置が未保存のBox（null）は、配置済みBoxの下へ順番に並べる
+// レイアウトを計算して組み立てる
+const buildLayout = (plants: Plant[]): LayoutItem[] => {
+  let nextY = plants.reduce(
+    (max, p) =>
+      p.gridPosition ? Math.max(max, p.gridPosition.y + p.gridPosition.h) : max,
+    0,
+  );
+  let unplacedIndex = 0;
+
+  return plants.map((plant) => {
+    // 共通のサイズ制限（最小幅1、最大幅4、最小高1、最大高2など）
+    const constraints = {
+      minW: 1,
+      maxW: 4, // COLSが4なので最大4まで
+      minH: 1,
+      maxH: 4, // 縦は最大4マス分までにする場合
+    };
+
+    if (plant.gridPosition) {
+      return {
+        i: plant.id!,
+        ...plant.gridPosition,
+        w: plant.gridPosition.w ?? 1,
+        h: plant.gridPosition.h ?? 1,
+        ...constraints,
+      };
+    }
+    const x = unplacedIndex % COLS;
+    const item = { i: plant.id!, x, y: nextY, w: 1, h: 1, ...constraints };
+    unplacedIndex++;
+    if (x === COLS - 1) nextY++;
+    return item;
+  });
+};
+
+const footerButtonStyle: React.CSSProperties = {
+  flex: 1,
+  padding: "8px 0",
+  fontSize: "12px",
+  border: "1px solid #aaa",
+  borderRadius: "4px",
+  backgroundColor: "#fff",
+  cursor: "pointer",
+};
 
 export const PlantCard: React.FC<Props> = ({
   plants,
   farmType,
   showArchived,
+  loading,
+  error,
   onSelectBox,
   onAddBox,
   onSwitchFarm,
   onToggleArchive,
   onGoToTop,
-  onLayoutChange,
+  onLayoutSave,
 }) => {
   const { width, containerRef, mounted } = useContainerWidth();
+  // ドラッグ直後に発生するクリックで詳細画面へ飛ばないようにする
+  const lastDragEndRef = useRef(0);
 
-  // 表示する植物データの絞り込み
-  const currentPlants = plants.filter(
-    (p) =>
-      p.farmType === farmType && (showArchived ? p.isArchived : !p.isArchived),
-  );
+  const layout = buildLayout(plants.filter((p) => p.id));
 
-  // 位置の定義（左列: 7, 5, 3, 1 / 右列: 8, 6, 4, 2）
-  const slotPositions: Record<number, { x: number; y: number }> = {
-    7: { x: 0, y: 0 },
-    8: { x: 1, y: 0 },
-    5: { x: 0, y: 1 },
-    6: { x: 1, y: 1 },
-    3: { x: 0, y: 2 },
-    4: { x: 1, y: 2 },
-    1: { x: 0, y: 3 },
-    2: { x: 1, y: 3 },
+  const handleDragStop = (
+    newLayout: Layout,
+    _oldItem: LayoutItem | null,
+    _newItem: LayoutItem | null,
+    _placeholder: LayoutItem | null,
+    event: Event,
+  ) => {
+    lastDragEndRef.current = event.timeStamp;
+    const positions: Record<string, GridPosition> = {};
+    newLayout.forEach(({ i, x, y, w, h }) => {
+      positions[i] = { x, y, w, h };
+    });
+    onLayoutSave(positions);
   };
 
-  const slotOrder = [7, 8, 5, 6, 3, 4, 1, 2];
+  const handleResizeStop = (
+    newLayout: Layout,
+    _oldItem: LayoutItem | null,
+    _newItem: LayoutItem | null,
+    _placeholder: LayoutItem | null,
+    event: Event,
+  ) => {
+    lastDragEndRef.current = event.timeStamp;
+    const positions: Record<string, GridPosition> = {};
+    newLayout.forEach(({ i, x, y, w, h }) => {
+      positions[i] = { x, y, w, h };
+    });
+    onLayoutSave(positions);
+  };
 
-  // 1〜8のスロットにデータを割り当て
-  const slots = slotOrder.map((slotNum, index) => ({
-    slotNum,
-    plant: currentPlants[index],
-  }));
-
-  // レイアウト配列の作成
-  const layout: readonly LayoutItem[] = slots.map((slot) => {
-    const pos = slotPositions[slot.slotNum];
-    const itemId =
-      slot.plant && slot.plant.id
-        ? String(slot.plant.id)
-        : `slot-${slot.slotNum}`;
-
-    return {
-      i: itemId,
-      x: pos.x,
-      y: pos.y,
-      w: 1,
-      h: 1,
-    };
-  });
+  const handleClick = (plant: Plant, event: React.MouseEvent) => {
+    if (event.timeStamp - lastDragEndRef.current < 300) return;
+    onSelectBox(plant);
+  };
 
   return (
     <div
@@ -116,6 +166,12 @@ export const PlantCard: React.FC<Props> = ({
         </button>
       </div>
 
+      {error && (
+        <p style={{ color: "#d32f2f", fontSize: "13px", margin: "0 0 8px" }}>
+          {error}
+        </p>
+      )}
+
       {/* メインエリア */}
       <div
         ref={containerRef}
@@ -129,12 +185,20 @@ export const PlantCard: React.FC<Props> = ({
           boxSizing: "border-box",
         }}
       >
+        {loading && plants.length === 0 && (
+          <p style={{ color: "#aaa", textAlign: "center" }}>読み込み中…</p>
+        )}
+        {!loading && plants.length === 0 && (
+          <p style={{ color: "#aaa", textAlign: "center" }}>
+            {showArchived ? "過去データはありません" : "Boxがありません"}
+          </p>
+        )}
         {mounted && (
           <ReactGridLayout
             layout={layout}
             width={width}
             gridConfig={{
-              cols: 2,
+              cols: COLS,
               rowHeight: 80,
               margin: [10, 10],
             }}
@@ -142,35 +206,18 @@ export const PlantCard: React.FC<Props> = ({
               enabled: !showArchived,
             }}
             resizeConfig={{
-              enabled: false,
+              // 過去データ閲覧時以外はリサイズを有効にする
+              enabled: !showArchived,
             }}
-            onLayoutChange={(newLayout) =>
-              onLayoutChange && onLayoutChange(newLayout)
-            }
+            onDragStop={handleDragStop}
+            onResizeStop={handleResizeStop} // ←リサイズ専用
           >
-            {slots.map((slot) => {
-              const plant = slot.plant;
-              const itemKey =
-                plant && plant.id ? String(plant.id) : `slot-${slot.slotNum}`;
-
-              // クリック時の処理（データがあればそのまま渡し、無ければ新規用オブジェクトを渡す）
-              const handleClick = () => {
-                if (plant) {
-                  onSelectBox(plant);
-                } else {
-                  onSelectBox({
-                    id: `new-${Date.now()}`,
-                    name: "",
-                    farmType: farmType,
-                    isArchived: showArchived,
-                  } as Plant);
-                }
-              };
-
-              return (
+            {plants
+              .filter((plant) => plant.id)
+              .map((plant) => (
                 <div
-                  key={itemKey}
-                  onClick={handleClick}
+                  key={plant.id}
+                  onClick={(e) => handleClick(plant, e)}
                   style={{
                     border: "1px solid #888",
                     borderRadius: "8px",
@@ -179,7 +226,7 @@ export const PlantCard: React.FC<Props> = ({
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    cursor: "pointer",
+                    cursor: showArchived ? "default" : "pointer",
                     boxShadow: "1px 1px 3px rgba(0,0,0,0.1)",
                     userSelect: "none",
                     padding: "4px 8px",
@@ -187,15 +234,15 @@ export const PlantCard: React.FC<Props> = ({
                     overflow: "hidden",
                   }}
                 >
-                  {plant && plant.name ? (
+                  {plant.name ? (
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
                         gap: "6px",
+                        maxWidth: "100%",
                       }}
                     >
-                      {/* アイコンが存在する場合に表示 */}
                       {plant.icon && (
                         <span style={{ fontSize: "18px" }}>{plant.icon}</span>
                       )}
@@ -209,7 +256,6 @@ export const PlantCard: React.FC<Props> = ({
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {plant.icon}
                         {plant.name}
                       </span>
                     </div>
@@ -219,8 +265,7 @@ export const PlantCard: React.FC<Props> = ({
                     </span>
                   )}
                 </div>
-              );
-            })}
+              ))}
           </ReactGridLayout>
         )}
       </div>
@@ -234,31 +279,16 @@ export const PlantCard: React.FC<Props> = ({
           marginTop: "15px",
         }}
       >
-        <button
-          onClick={onGoToTop}
-          style={{
-            flex: 1,
-            padding: "8px 0",
-            fontSize: "12px",
-            border: "1px solid #aaa",
-            borderRadius: "4px",
-            backgroundColor: "#fff",
-            cursor: "pointer",
-          }}
-        >
+        <button onClick={onGoToTop} style={footerButtonStyle}>
           終了
         </button>
         <button
           onClick={onAddBox}
           disabled={showArchived}
           style={{
-            flex: 1,
-            padding: "8px 0",
-            fontSize: "12px",
-            border: "1px solid #aaa",
-            borderRadius: "4px",
-            backgroundColor: "#fff",
-            cursor: "pointer",
+            ...footerButtonStyle,
+            cursor: showArchived ? "not-allowed" : "pointer",
+            opacity: showArchived ? 0.5 : 1,
           }}
         >
           BOXを追加
@@ -267,15 +297,7 @@ export const PlantCard: React.FC<Props> = ({
           onClick={() =>
             onSwitchFarm(farmType === "spring" ? "autumn" : "spring")
           }
-          style={{
-            flex: 1,
-            padding: "8px 0",
-            fontSize: "12px",
-            border: "1px solid #aaa",
-            borderRadius: "4px",
-            backgroundColor: "#fff",
-            cursor: "pointer",
-          }}
+          style={footerButtonStyle}
         >
           {farmType === "spring" ? "秋ファームへ" : "春ファームへ"}
         </button>

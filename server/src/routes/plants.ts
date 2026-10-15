@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getPlants,
+  getPlant,
   createPlant,
   updatePlant,
   deletePlant,
@@ -9,8 +10,9 @@ import {
 const router = Router();
 
 router.get("/", getPlants);
+router.get("/:id", getPlant);
 router.post("/", createPlant);
-router.put("/:id", updatePlant); // ★追加
-router.delete("/:id", deletePlant); // ★追加
+router.put("/:id", updatePlant);
+router.delete("/:id", deletePlant);
 
 export default router;

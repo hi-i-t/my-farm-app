@@ -1,0 +1,6 @@
+
+> server@1.0.0 dev
+> tsx watch src/index.ts
+
+◇ injected env (2) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+Server is running on http://localhost:3001

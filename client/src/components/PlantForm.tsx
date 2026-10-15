@@ -61,21 +61,29 @@ export const PlantForm: React.FC<Props> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ★超重要：selectedPlant の持っている位置情報(gridPosition)やID、farmTypeを絶対に崩さず、中身だけを更新する
+    // もし「選択してください。」または空になっていたら、データベースには空（"" など）として保存する
+    const isCleared = name === "選択してください。" || name === "";
+
+    // selectedPlant の持っている位置情報(gridPosition)やID、farmTypeを絶対に崩さず、中身だけを更新する
     const updatedPlant: Plant = {
-      ...selectedPlant, // これにより、どのボックスをタップしたかの座標(gridPosition)が完全に維持されます
-      name: name,
-      type: type,
-      icon: icon,
-      plantedDate: plantedDate,
-      harvestDate: harvestDate,
-      memo: memo,
+      ...selectedPlant, // これにより、どのボックスをタップしたかの座標(gridPosition)が維持されます
+      name: isCleared ? "" : name,
+      type: isCleared ? "種" : type, // 必要に応じて初期値に
+      icon: isCleared ? "" : icon,
+      plantedDate: isCleared ? "" : plantedDate,
+      harvestDate: isCleared ? "" : harvestDate,
+      memo: isCleared ? "" : memo,
     };
 
     onSave(updatedPlant);
   };
 
-  const isInvalid = name === "選択してください。" || name === "";
+  // もともと空だった（=初めから名前がなかった）場合は選択必須にするが、
+  // もともと何かしらの名前が入っていたBoxなら、空（"選択してください。"）に戻して決定できるようにする
+  const wasInitiallyEmpty =
+    !selectedPlant.name || selectedPlant.name === "選択してください。";
+  const isInvalid =
+    wasInitiallyEmpty && (name === "選択してください。" || name === "");
 
   return (
     <div

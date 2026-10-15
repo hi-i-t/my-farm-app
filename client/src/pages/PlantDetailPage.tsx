@@ -1,55 +1,88 @@
-import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { PlantForm } from "../components/PlantForm";
 import { Plant } from "../types/plant";
-import { updatePlant, deletePlant } from "../services/api";
+import { getPlant, updatePlant, deletePlant } from "../services/api";
 
 export const PlantDetailPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const selectedPlant: Plant = location.state?.selectedPlant;
+  const { farmType, id } = useParams();
+  const [plant, setPlant] = useState<Plant | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!selectedPlant) {
-    navigate("/farm");
-    return null;
-  }
+  const backToFarm = () => navigate(`/farm/${farmType}`);
 
-  // すべてのボックスが最初からDBのIDを持っているため、保存は常に updatePlant（更新）に一本化する
+  // URLのIDからDBのデータを読み込む（リロードしても表示できる）
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    getPlant(id)
+      .then((data) => {
+        if (!cancelled) setPlant(data);
+      })
+      .catch((err) => {
+        console.error("データ取得エラー:", err);
+        if (!cancelled) setError("Boxが見つかりませんでした。");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   const handleSave = async (updatedPlant: Plant) => {
+    if (!id) return;
     try {
-      if (!updatedPlant.id) {
-        throw new Error("更新対象のIDが見つかりません。");
-      }
-
-      // 常に updatePlant を実行して、選択した名前やアイコンを確実に上書き保存する
-      await updatePlant(updatedPlant.id, updatedPlant);
-
-      navigate("/farm");
-    } catch (error) {
-      console.error("データの保存に失敗しました:", error);
+      // 位置(gridPosition)やファームは変えず、入力内容だけを更新する
+      await updatePlant(id, {
+        name: updatedPlant.name,
+        type: updatedPlant.type,
+        icon: updatedPlant.icon,
+        plantedDate: updatedPlant.plantedDate,
+        harvestDate: updatedPlant.harvestDate,
+        memo: updatedPlant.memo,
+      });
+      backToFarm();
+    } catch (err) {
+      console.error("データの保存に失敗しました:", err);
       alert("保存処理中にエラーが発生しました。");
     }
   };
 
-  const handleDelete = async (id?: string) => {
+  const handleDelete = async () => {
+    if (!id || !window.confirm("このBoxを削除しますか？")) return;
     try {
-      // 本物のDB IDならAPIで削除
-      if (id && !id.startsWith("init-") && !id.startsWith("new-")) {
-        await deletePlant(id);
-      }
-      navigate("/farm");
-    } catch (error) {
-      console.error("データの削除に失敗しました:", error);
+      await deletePlant(id);
+      backToFarm();
+    } catch (err) {
+      console.error("データの削除に失敗しました:", err);
       alert("削除処理中にエラーが発生しました。");
     }
   };
 
+  if (error) {
+    return (
+      <div style={{ textAlign: "center", paddingTop: "60px" }}>
+        <p>{error}</p>
+        <button onClick={backToFarm}>メイン画面へ戻る</button>
+      </div>
+    );
+  }
+
+  if (!plant) {
+    return (
+      <p style={{ textAlign: "center", paddingTop: "60px", color: "#aaa" }}>
+        読み込み中…
+      </p>
+    );
+  }
+
   return (
     <PlantForm
-      selectedPlant={selectedPlant}
+      key={plant.id}
+      selectedPlant={plant}
       onSave={handleSave}
       onDelete={handleDelete}
-      onBack={() => navigate("/farm")}
+      onBack={backToFarm}
     />
   );
 };

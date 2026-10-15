@@ -3,110 +3,40 @@ import { Plant } from "../types/plant";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
-// 作物一覧を取得
-export const getPlants = async (): Promise<Plant[]> => {
-  const response = await fetch(`${API_BASE_URL}/plants`);
-  if (!response.ok) throw new Error("Failed to fetch plants");
-  const data = await response.json();
-
-  return data.map((item: any) => ({
-    id: String(item.id),
-    name: item.name,
-    type: item.type,
-    farmType: item.farm_type || item.farmType || "spring",
-    isArchived: item.is_archived ?? item.isArchived ?? false,
-    plantedDate: item.planted_date || item.plantedDate || "",
-    harvestDate: item.harvest_date || item.harvestDate || "",
-    memo: item.memo || "",
-    icon: item.icon || "",
-    gridPosition:
-      typeof item.grid_position === "object" && item.grid_position !== null
-        ? item.grid_position
-        : { x: 0, y: 0, w: 2, h: 2 },
-  }));
+// ★ DBの列名との変換はサーバー側で行うので、クライアントは Plant 型（キャメルケース）のままやり取りする
+const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || `API error: ${response.status}`);
+  }
+  return response.json();
 };
+
+// 作物一覧を取得
+export const getPlants = () => request<Plant[]>("/plants");
+
+// 作物を1件取得
+export const getPlant = (id: string) => request<Plant>(`/plants/${id}`);
 
 // 作物を新規登録
-export const createPlant = async (plant: Omit<Plant, "id">): Promise<Plant> => {
-  const payload = {
-    name: plant.name,
-    type: plant.type,
-    farm_type: plant.farmType,
-    is_archived: plant.isArchived ?? false,
-    planted_date: plant.plantedDate,
-    harvest_date: plant.harvestDate,
-    memo: plant.memo,
-    icon: plant.icon,
-    grid_position: plant.gridPosition,
-  };
+export const createPlant = (plant: Omit<Plant, "id">) =>
+  request<Plant>("/plants", { method: "POST", body: JSON.stringify(plant) });
 
-  const response = await fetch(`${API_BASE_URL}/plants`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+// 作物をまとめて登録（初期の空Box作成用）
+export const createPlants = (plants: Omit<Plant, "id">[]) =>
+  request<Plant[]>("/plants", { method: "POST", body: JSON.stringify(plants) });
 
-  if (!response.ok) throw new Error("Failed to create plant");
-  const data = await response.json();
-
-  return {
-    id: String(data.id),
-    name: data.name,
-    type: data.type,
-    farmType: data.farm_type || plant.farmType,
-    isArchived: data.is_archived ?? plant.isArchived,
-    plantedDate: data.planted_date || "",
-    harvestDate: data.harvest_date || "",
-    memo: data.memo || "",
-    icon: data.icon || plant.icon || "",
-    gridPosition: data.grid_position || plant.gridPosition,
-  };
-};
-
-// 作物を更新
-export const updatePlant = async (
-  id: string,
-  plant: Omit<Plant, "id">,
-): Promise<Plant> => {
-  const payload = {
-    name: plant.name,
-    type: plant.type,
-    farm_type: plant.farmType,
-    is_archived: plant.isArchived ?? false,
-    planted_date: plant.plantedDate,
-    harvest_date: plant.harvestDate,
-    memo: plant.memo,
-    icon: plant.icon,
-    grid_position: plant.gridPosition,
-  };
-
-  const response = await fetch(`${API_BASE_URL}/plants/${id}`, {
+// 作物を更新（送った項目だけが更新される）
+export const updatePlant = (id: string, plant: Partial<Omit<Plant, "id">>) =>
+  request<Plant>(`/plants/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(plant),
   });
-
-  if (!response.ok) throw new Error("Failed to update plant");
-  const data = await response.json();
-
-  return {
-    id: String(data.id),
-    name: data.name,
-    type: data.type,
-    farmType: data.farm_type || plant.farmType,
-    isArchived: data.is_archived ?? plant.isArchived,
-    plantedDate: data.planted_date || "",
-    harvestDate: data.harvest_date || "",
-    memo: data.memo || "",
-    icon: data.icon || plant.icon || "",
-    gridPosition: data.grid_position || plant.gridPosition,
-  };
-};
 
 // 作物を削除
-export const deletePlant = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/plants/${id}`, {
-    method: "DELETE",
-  });
-  if (!response.ok) throw new Error("Failed to delete plant");
-};
+export const deletePlant = (id: string) =>
+  request<{ message: string }>(`/plants/${id}`, { method: "DELETE" });
