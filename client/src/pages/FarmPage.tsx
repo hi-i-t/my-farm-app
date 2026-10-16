@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Navigate,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { PlantCard } from "../components/PlantCard";
 import { FarmType, GridPosition, Plant } from "../types/plant";
 import {
@@ -12,6 +7,8 @@ import {
   createPlant,
   createPlants,
   updatePlant,
+  createSnapshot,
+  getSnapshotItems,
 } from "../services/api";
 
 const isFarmType = (value: unknown): value is FarmType =>
@@ -34,12 +31,16 @@ const generateInitialBoxes = (farmType: FarmType): Omit<Plant, "id">[] =>
 export const FarmPage: React.FC = () => {
   const navigate = useNavigate();
   const { farmType } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const showArchived = searchParams.get("archived") === "1";
 
   const [plants, setPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // ★ 追加：過去のスナップショット閲覧中かどうか、および選択中のタイトル
+  const [selectedSnapshotTitle, setSelectedSnapshotTitle] = useState<
+    string | null
+  >(null);
+
   // 空Boxの自動作成を1回だけにする（StrictModeでeffectが2回走っても重複しない）
   // 2回目のeffectも同じ作成処理の結果を待てるよう、Promiseを保持しておく
   const seedingRef = useRef<Map<FarmType, Promise<Plant[]>>>(new Map());
@@ -48,6 +49,9 @@ export const FarmPage: React.FC = () => {
   useEffect(() => {
     if (!isFarmType(farmType)) return;
     let cancelled = false;
+
+    // 過去データ閲覧モードでない場合のみ通常のplantsを読み込む
+    if (selectedSnapshotTitle) return;
 
     const load = async () => {
       setLoading(true);
@@ -86,15 +90,14 @@ export const FarmPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [farmType]);
+  }, [farmType, selectedSnapshotTitle]);
 
   if (!isFarmType(farmType)) {
     return <Navigate to="/farm/spring" replace />;
   }
 
   const currentPlants = plants.filter(
-    (p) =>
-      p.farmType === farmType && (showArchived ? p.isArchived : !p.isArchived),
+    (p) => p.farmType === farmType && !p.isArchived,
   );
 
   // ドラッグで並べ替えたとき：位置が変わったBoxだけDBに保存する
@@ -133,14 +136,19 @@ export const FarmPage: React.FC = () => {
 
   // Boxをタップしたとき -> 詳細ページへ
   const handleSelectBox = (plant: Plant) => {
-    if (showArchived || !plant.id) return; // 過去データ閲覧時は編集不可
+    if (selectedSnapshotTitle || !plant.id) return; // 過去データ閲覧時は編集不可
     navigate(`/farm/${farmType}/plants/${plant.id}`);
   };
 
   // BOXを追加：一番下の段に空BoxをDBへ登録する
   const handleAddBox = async () => {
+    if (selectedSnapshotTitle) return; // 過去データ閲覧時は追加不可
+
     const bottom = currentPlants.reduce(
-      (max, p) => (p.gridPosition ? Math.max(max, p.gridPosition.y + p.gridPosition.h) : max),
+      (max, p) =>
+        p.gridPosition
+          ? Math.max(max, p.gridPosition.y + p.gridPosition.h)
+          : max,
       0,
     );
     try {
@@ -162,21 +170,101 @@ export const FarmPage: React.FC = () => {
     }
   };
 
+  // ==========================================
+  // ★ スナップショット保存の処理
+  // ==========================================
+  const handleSaveSnapshot = async () => {
+    try {
+      // 例: "2026-10-16現在 春ファーム" のようなタイトルを自動生成
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const farmNameJa = farmType === "spring" ? "春ファーム" : "秋ファーム";
+      const title = `${dateStr}現在 ${farmNameJa}`;
+
+      await createSnapshot(farmType, title);
+      alert(`「${title}」として現在のファーム状態を保存しました！`);
+    } catch (err) {
+      console.error("スナップショット保存エラー:", err);
+      setError("スナップショットの保存に失敗しました。");
+    }
+  };
+
+  // ==========================================
+  // ★ 過去データを読み込む処理（例：指定IDのスナップショットを表示）
+  // ==========================================
+  const handleLoadSnapshot = async (snapshotId: number, title: string) => {
+    try {
+      setLoading(true);
+      const items = await getSnapshotItems(snapshotId);
+      setPlants(items);
+      setSelectedSnapshotTitle(title);
+      setError(null);
+    } catch (err) {
+      console.error("過去データ読み込みエラー:", err);
+      setError("過去データの取得に失敗しました。");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 現在の通常モードに戻す
+  const handleReturnToCurrent = () => {
+    setSelectedSnapshotTitle(null);
+    // useEffectが走って現在のデータが再読み込みされます
+  };
+
   return (
-    <PlantCard
-      plants={currentPlants}
-      farmType={farmType}
-      showArchived={showArchived}
-      loading={loading}
-      error={error}
-      onSelectBox={handleSelectBox}
-      onAddBox={handleAddBox}
-      onSwitchFarm={(type) => navigate(`/farm/${type}`)}
-      onToggleArchive={() =>
-        setSearchParams(showArchived ? {} : { archived: "1" })
-      }
-      onGoToTop={() => navigate("/")}
-      onLayoutSave={handleLayoutSave}
-    />
+    <div>
+      {/* 過去データ閲覧中の場合に上部に通知バナーを表示する例 */}
+      {selectedSnapshotTitle && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "430px",
+            margin: "0 auto",
+            backgroundColor: "#fef08a",
+            padding: "10px 15px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "13px",
+            fontWeight: "bold",
+            borderRadius: "0 0 8px 8px", // 下側の角を丸くするとカードと馴染みます
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          📁 過去データ閲覧中: {selectedSnapshotTitle}
+          <button
+            onClick={handleReturnToCurrent}
+            style={{
+              padding: "5px 12px",
+              backgroundColor: "#fff",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            現在のファームに戻る
+          </button>
+        </div>
+      )}
+      <PlantCard
+        plants={currentPlants}
+        farmType={farmType}
+        showArchived={selectedSnapshotTitle !== null}
+        loading={loading}
+        error={error}
+        onSelectBox={handleSelectBox}
+        onAddBox={handleAddBox}
+        onSwitchFarm={(type) => navigate(`/farm/${type}`)}
+        onGoToTop={() => navigate("/")}
+        onLayoutSave={handleLayoutSave}
+        onSaveSnapshot={handleSaveSnapshot} // 保存ボタン用
+        onLoadSnapshot={handleLoadSnapshot} // 過去データ読み込み用
+      />
+    </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import ReactGridLayout, {
   useContainerWidth,
   Layout,
@@ -7,6 +7,7 @@ import ReactGridLayout, {
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { FarmType, GridPosition, Plant } from "../types/plant";
+import { getSnapshots, Snapshot } from "../services/api"; // スナップショット一覧取得用
 
 interface Props {
   plants: Plant[]; // 表示するファームのBoxだけ渡す
@@ -17,9 +18,10 @@ interface Props {
   onSelectBox: (plant: Plant) => void;
   onAddBox: () => void;
   onSwitchFarm: (type: FarmType) => void;
-  onToggleArchive: () => void;
   onGoToTop: () => void;
   onLayoutSave: (positions: Record<string, GridPosition>) => void;
+  onSaveSnapshot?: () => void; // スナップショット保存
+  onLoadSnapshot?: (snapshotId: number, title: string) => void; // 過去データ読み込み
 }
 
 const COLS = 4;
@@ -80,13 +82,19 @@ export const PlantCard: React.FC<Props> = ({
   onSelectBox,
   onAddBox,
   onSwitchFarm,
-  onToggleArchive,
   onGoToTop,
   onLayoutSave,
+  onSaveSnapshot,
+  onLoadSnapshot,
 }) => {
   const { width, containerRef, mounted } = useContainerWidth();
   // ドラッグ直後に発生するクリックで詳細画面へ飛ばないようにする
   const lastDragEndRef = useRef(0);
+
+  // ★過去データ一覧モーダルの開閉状態とリストデータ
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [snapshotsList, setSnapshotsList] = useState<Snapshot[]>([]);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const layout = buildLayout(plants.filter((p) => p.id));
 
@@ -125,6 +133,23 @@ export const PlantCard: React.FC<Props> = ({
     onSelectBox(plant);
   };
 
+  // ★ 「過去のデータ」ボタンが押されたとき：一覧を取得してモーダルを開く
+  const handleOpenSnapshotModal = async () => {
+    try {
+      setModalLoading(true);
+      const data = await getSnapshots();
+      // 現在のファームタイプ（spring / autumn）に一致するものだけ、あるいは全部表示するなどお好みで
+      // ここでは全件取得してリスト化します
+      setSnapshotsList(data);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("スナップショット一覧取得エラー:", err);
+      alert("過去データの取得に失敗しました。");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -136,6 +161,7 @@ export const PlantCard: React.FC<Props> = ({
         minHeight: "100vh",
         boxSizing: "border-box",
         boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        position: "relative",
       }}
     >
       {/* ヘッダー */}
@@ -151,27 +177,47 @@ export const PlantCard: React.FC<Props> = ({
           {farmType === "spring" ? "春ファーム" : "秋ファーム"}{" "}
           {showArchived && "(過去データ)"}
         </h2>
-        <button
-          onClick={onToggleArchive}
-          style={{
-            backgroundColor: showArchived ? "#ffc107" : "#ffffff",
-            border: "1px solid #ccc",
-            padding: "5px 10px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            cursor: "pointer",
-          }}
-        >
-          {showArchived ? "現在のデータ" : "過去のデータ"}
-        </button>
-      </div>
 
+        <div style={{ display: "flex", gap: "6px" }}>
+          {/* ★ 保存ボタン */}
+          {onSaveSnapshot && (
+            <button
+              onClick={onSaveSnapshot}
+              style={{
+                backgroundColor: "#4caf50",
+                color: "#fff",
+                border: "none",
+                padding: "5px 10px",
+                borderRadius: "4px",
+                fontSize: "12px",
+                cursor: "pointer",
+              }}
+            >
+              保存
+            </button>
+          )}
+
+          {/* 過去のデータ一覧を開くボタン */}
+          <button
+            onClick={handleOpenSnapshotModal}
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #ccc",
+              padding: "5px 10px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              cursor: "pointer",
+            }}
+          >
+            過去のデータ
+          </button>
+        </div>
+      </div>
       {error && (
         <p style={{ color: "#d32f2f", fontSize: "13px", margin: "0 0 8px" }}>
           {error}
         </p>
       )}
-
       {/* メインエリア */}
       <div
         ref={containerRef}
@@ -189,9 +235,7 @@ export const PlantCard: React.FC<Props> = ({
           <p style={{ color: "#aaa", textAlign: "center" }}>読み込み中…</p>
         )}
         {!loading && plants.length === 0 && (
-          <p style={{ color: "#aaa", textAlign: "center" }}>
-            {showArchived ? "過去データはありません" : "Boxがありません"}
-          </p>
+          <p style={{ color: "#aaa", textAlign: "center" }}>Boxがありません</p>
         )}
         {mounted && (
           <ReactGridLayout
@@ -269,7 +313,6 @@ export const PlantCard: React.FC<Props> = ({
           </ReactGridLayout>
         )}
       </div>
-
       {/* フッター */}
       <div
         style={{
@@ -302,6 +345,89 @@ export const PlantCard: React.FC<Props> = ({
           {farmType === "spring" ? "秋ファームへ" : "春ファームへ"}
         </button>
       </div>
+      {isModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fff",
+              padding: "20px",
+              borderRadius: "8px",
+              width: "90%",
+              maxWidth: "350px",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              boxSizing: "border-box",
+            }}
+          >
+            <h3 style={{ marginTop: 0, fontSize: "1.1rem" }}>
+              過去のファームデータ
+            </h3>
+            {modalLoading && <p>読み込み中...</p>}
+            {!modalLoading && snapshotsList.length === 0 && (
+              <p style={{ color: "#666", fontSize: "14px" }}>
+                保存されたデータはありません。
+              </p>
+            )}
+            {!modalLoading && snapshotsList.length > 0 && (
+              <ul
+                style={{ listStyle: "none", padding: 0, margin: "10px 0 20px" }}
+              >
+                {snapshotsList.map((snap) => (
+                  <li key={snap.id} style={{ marginBottom: "8px" }}>
+                    <button
+                      onClick={() => {
+                        if (onLoadSnapshot) {
+                          onLoadSnapshot(snap.id, snap.title);
+                        }
+                        setIsModalOpen(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        textAlign: "left",
+                        backgroundColor: "#f5f5f5",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {snap.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                backgroundColor: "#ccc",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
