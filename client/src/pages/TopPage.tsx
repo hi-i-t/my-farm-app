@@ -6,14 +6,22 @@ export const TopPage: React.FC = () => {
 
   return (
     <div
+      className="app-container"
       style={{
-        textAlign: "center",
+        backgroundColor: "#fffdf0", // 薄い黄色
         paddingTop: "100px",
-        minHeight: "100vh",
-        backgroundColor: "#fafafa",
+        paddingLeft: "20px",
+        paddingRight: "20px",
+        boxSizing: "border-box",
+        textAlign: "center",
       }}
     >
-      <h1>そだてこファーム</h1>
+      {/* 🥕 人参とお花 🌸 で挟む */}
+      <h1>
+        <span style={{ marginRight: "10px" }}>🥕</span>
+        そだてこファーム
+        <span style={{ marginLeft: "10px" }}>🌸</span>
+      </h1>
       <p style={{ color: "#666" }}>畑のレイアウト管理アプリ</p>
 
       {/* 1枚目設計図の「そだてこファーム (トップ)」からの遷移 */}

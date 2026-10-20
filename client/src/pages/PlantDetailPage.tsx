@@ -61,7 +61,10 @@ export const PlantDetailPage: React.FC = () => {
 
   if (error) {
     return (
-      <div style={{ textAlign: "center", paddingTop: "60px" }}>
+      <div
+        className="app-container"
+        style={{ textAlign: "center", paddingTop: "60px" }}
+      >
         <p>{error}</p>
         <button onClick={backToFarm}>メイン画面へ戻る</button>
       </div>
@@ -77,12 +80,14 @@ export const PlantDetailPage: React.FC = () => {
   }
 
   return (
-    <PlantForm
-      key={plant.id}
-      selectedPlant={plant}
-      onSave={handleSave}
-      onDelete={handleDelete}
-      onBack={backToFarm}
-    />
+    <div className="app-container">
+      <PlantForm
+        key={plant.id}
+        selectedPlant={plant}
+        onSave={handleSave}
+        onDelete={handleDelete}
+        onBack={backToFarm}
+      />
+    </div>
   );
 };

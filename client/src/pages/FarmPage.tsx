@@ -214,14 +214,13 @@ export const FarmPage: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="app-container">
       {/* 過去データ閲覧中の場合に上部に通知バナーを表示する例 */}
       {selectedSnapshotTitle && (
         <div
           style={{
             width: "100%",
-            maxWidth: "430px",
-            margin: "0 auto",
+
             backgroundColor: "#fef08a",
             padding: "10px 15px",
             boxSizing: "border-box",

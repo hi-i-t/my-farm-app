@@ -154,8 +154,7 @@ export const PlantCard: React.FC<Props> = ({
     <div
       style={{
         width: "100%",
-        maxWidth: "430px",
-        margin: "0 auto",
+
         padding: "15px",
         backgroundColor: farmType === "spring" ? "#eef7ee" : "#fdf3e7",
         minHeight: "100vh",

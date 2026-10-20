@@ -1,3 +1,10 @@
+@font-face {
+  font-family: "KTEGAKI";
+  src: url("/fonts/KTEGAKI.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -11,8 +18,9 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* フォント指定を "KTEGAKI" に統一 */
+  --sans: "KTEGAKI", sans-serif;
+  --heading: "KTEGAKI", sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -60,21 +68,30 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  font-family: var(--sans);
 }
 
-body {
-  margin: 0;
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+span,
+button,
+input {
+  font-family: "KTEGAKI", sans-serif;
 }
 
 h1,
 h2 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: normal; /* 太さによる代替フォントへの切り替わりを防止 */
   color: var(--text-h);
 }
 
 h1 {
-  font-size: 56px;
+  font-size: 36px;
   letter-spacing: -1.68px;
   margin: 32px 0;
   @media (max-width: 1024px) {
@@ -82,6 +99,7 @@ h1 {
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
@@ -91,6 +109,7 @@ h2 {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -108,4 +127,20 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+/* --- アプリ全体の配置設定 --- */
+.app-container {
+  width: 100%;
+  max-width: 100%; /* スマホ：画面幅にぴったりフィット */
+  margin: 0 auto;
+  min-height: 100vh;
+  box-sizing: border-box;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+/* タブレット・パソコンサイズ（横幅 600px 以上） */
+@media (min-width: 600px) {
+  .app-container {
+    max-width: 768px; /* パソコン・タブレット：横幅をゆったり広くする */
+  }
 }

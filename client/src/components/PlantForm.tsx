@@ -14,9 +14,64 @@ export const PlantForm: React.FC<Props> = ({
   onDelete,
   onBack,
 }) => {
+  // 野菜・お花の選択肢（アイコンと名前のセット）
+  const plantOptions = [
+    { name: "選択してください。", icon: "" },
+    // --- 野菜・根菜・葉物 ---
+    { name: "にんじん", icon: "🥕" },
+    { name: "ほうれん草", icon: "🥬" },
+    { name: "玉ねぎ", icon: "🧅" },
+    { name: "じゃがいも", icon: "🥔" },
+    { name: "にんにく", icon: "🧄" },
+    { name: "はくさい", icon: "🥬" },
+    { name: "キャベツ", icon: "🥬" },
+    { name: "春菊", icon: "🌿" },
+    { name: "小松菜", icon: "🥬" },
+    { name: "さつまいも", icon: "🍠" },
+    { name: "ねぎ", icon: "🌱" },
+    { name: "なす", icon: "🍆" },
+    { name: "きゅうり", icon: "🥒" },
+    { name: "トマト", icon: "🍅" },
+    { name: "いちご", icon: "🍓" },
+    { name: "里いも", icon: "🥔" },
+    { name: "菊いも", icon: "🥔" },
+    { name: "ピーマン", icon: "🫑" },
+    { name: "ブロッコリー", icon: "🥦" },
+    { name: "アスパラ", icon: "🌿" },
+    { name: "カボチャ", icon: "🎃" },
+    { name: "スイカ", icon: "🍉" },
+    { name: "ウリ", icon: "🍈" },
+    { name: "パプリカ", icon: "🫑" },
+    { name: "ヤーコン", icon: "🍠" },
+    { name: "しょうが", icon: "🫚" },
+    { name: "とうがらし", icon: "🌶️" },
+    { name: "エンドウ豆", icon: "🫘" },
+
+    // --- お花 ---
+    { name: "ダリア", icon: "🌸" },
+    { name: "菊", icon: "🌼" },
+    { name: "グラジオラス", icon: "🌾" },
+    { name: "百日草", icon: "🌺" },
+    { name: "ひまわり", icon: "🌻" },
+
+    // --- その他 ---
+    { name: "その他", icon: "⭐" },
+  ];
+
+  // もし初期値がリストにないカスタム名なら「その他」扱いにする
+  const initialName = selectedPlant.name || "選択してください。";
+  const isInitialCustom =
+    initialName !== "選択してください。" &&
+    !plantOptions.some((opt) => opt.name === initialName);
+
   // フォームで入力・選択された値を保持するステート
-  const [name, setName] = useState(selectedPlant.name || "選択してください。");
-  const [icon, setIcon] = useState(selectedPlant.icon || "");
+  const [name, setName] = useState<string>(
+    isInitialCustom ? "その他" : initialName,
+  );
+  const [customName, setCustomName] = useState<string>(
+    isInitialCustom ? initialName : "",
+  );
+  const [icon, setIcon] = useState<string>(selectedPlant.icon || "");
   const [type, setType] = useState(selectedPlant.type || "種");
   const [plantedDate, setPlantedDate] = useState(
     selectedPlant.plantedDate || "",
@@ -26,22 +81,19 @@ export const PlantForm: React.FC<Props> = ({
   );
   const [memo, setMemo] = useState(selectedPlant.memo || "");
 
-  // 野菜・お花の選択肢（アイコンと名前のセット）
-  const plantOptions = [
-    { name: "選択してください。", icon: "" },
-    { name: "にんじん", icon: "🥕" },
-    { name: "トマト", icon: "🍅" },
-    { name: "ナス", icon: "🍆" },
-    { name: "ひまわり", icon: "🌻" },
-  ];
-
-  // セレクトボックスが変更されたときの処理
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedName = e.target.value;
-    const found = plantOptions.find((opt) => opt.name === selectedName);
-    if (found) {
-      setName(found.name);
-      setIcon(found.icon);
+    if (selectedName === "その他") {
+      setName("その他");
+      setCustomName("");
+      setIcon("⭐");
+    } else {
+      const found = plantOptions.find((opt) => opt.name === selectedName);
+      if (found) {
+        setName(found.name);
+        setCustomName("");
+        setIcon(found.icon);
+      }
     }
   };
 
@@ -61,15 +113,16 @@ export const PlantForm: React.FC<Props> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // もし「選択してください。」または空になっていたら、データベースには空（"" など）として保存する
-    const isCleared = name === "選択してください。" || name === "";
+    // 「その他」ならテキストボックスに入力した文字を使う
+    const actualName = name === "その他" ? customName.trim() : name;
+    const isCleared = actualName === "選択してください。" || actualName === "";
 
     // selectedPlant の持っている位置情報(gridPosition)やID、farmTypeを絶対に崩さず、中身だけを更新する
     const updatedPlant: Plant = {
-      ...selectedPlant, // これにより、どのボックスをタップしたかの座標(gridPosition)が維持されます
-      name: isCleared ? "" : name,
-      type: isCleared ? "種" : type, // 必要に応じて初期値に
-      icon: isCleared ? "" : icon,
+      ...selectedPlant,
+      name: isCleared ? "" : actualName, // ← 「その他」のときは入力した文字が保存されます
+      type: isCleared ? "種" : type,
+      icon: isCleared ? "" : name === "その他" ? "⭐" : icon,
       plantedDate: isCleared ? "" : plantedDate,
       harvestDate: isCleared ? "" : harvestDate,
       memo: isCleared ? "" : memo,
@@ -97,11 +150,12 @@ export const PlantForm: React.FC<Props> = ({
       }}
     >
       <h3 style={{ textAlign: "center", marginBottom: "20px" }}>
-        &lt;DB&gt; 野菜・お花情報設定
+        野菜・お花情報設定
       </h3>
 
       <form onSubmit={handleSubmit}>
         {/* アイコン / 名称選択 */}
+        {/* アイコン / 名称選択のブロック（既存） */}
         <div style={{ marginBottom: "15px" }}>
           <label style={{ display: "block", marginBottom: "5px" }}>
             アイコン / 名称選択:
@@ -118,6 +172,29 @@ export const PlantForm: React.FC<Props> = ({
             ))}
           </select>
         </div>
+
+        {/* 「その他」が選ばれたときに出現する自由入力欄 */}
+        {name === "その他" && (
+          <div style={{ marginBottom: "15px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                color: "#ca8a04",
+                fontWeight: "bold",
+              }}
+            >
+              名称を直接入力 (アイコン: ⭐):
+            </label>
+            <input
+              type="text"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="名称を入力してください"
+              style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+            />
+          </div>
+        )}
 
         {/* タイプ (ラジオボタン) */}
         <div style={{ marginBottom: "15px" }}>
@@ -169,7 +246,7 @@ export const PlantForm: React.FC<Props> = ({
         {/* メモ */}
         <div style={{ marginBottom: "20px" }}>
           <label style={{ display: "block", marginBottom: "5px" }}>
-            メモ (テキストボックス):
+            メモ :
           </label>
           <textarea
             value={memo}
