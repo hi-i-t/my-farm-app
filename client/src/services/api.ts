@@ -44,9 +44,9 @@ const mapToDb = (plant: Partial<Plant>) => {
     planted_date: plant.plantedDate, // 画面の形をデータベースの形（アンダーバー付き）に
     harvest_date: plant.harvestDate,
     memo: plant.memo,
-    farm_type: plant.farmType,
-    is_archived: plant.isArchived,
-    grid_position: plant.gridPosition,
+    farmType: plant.farmType,
+    isArchived: plant.isArchived,
+    gridPosition: plant.gridPosition,
   };
 };
 
