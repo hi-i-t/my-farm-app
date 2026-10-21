@@ -20,7 +20,7 @@ export interface Snapshot {
 // ==========================================
 const mapFromDb = (item: any): Plant => {
   return {
-    id: item.id,
+    id: String(item.id),
     name: item.name,
     type: item.type,
     icon: item.icon,
@@ -66,7 +66,7 @@ export const getPlant = async (id: string): Promise<Plant> => {
   const { data, error } = await supabase
     .from("plants")
     .select("*")
-    .eq("id", id)
+    .eq("id", Number(id))
     .single();
   if (error) throw new Error(error.message);
   return mapFromDb(data);
@@ -106,7 +106,7 @@ export const updatePlant = async (
   const { data, error } = await supabase
     .from("plants")
     .update(dbData)
-    .eq("id", id)
+    .eq("id", Number(id))
     .select()
     .single();
   if (error) throw new Error(error.message);
@@ -124,15 +124,53 @@ export const deletePlant = async (id: string): Promise<{ message: string }> => {
 // スナップショット関連のAPI
 // ==========================================
 
-// スナップショットを保存する
+// スナップショットを保存する（親データの作成 ＋ snapshot_items へのデータコピー）
 export const createSnapshot = async (farmType: string, title: string) => {
-  const { data, error } = await supabase
+  if (!farmType || !title) {
+    throw new Error("farmType と title は必須です。");
+  }
+
+  // 1. snapshots テーブルに親データを挿入
+  const { data: snapshotData, error: snapshotError } = await supabase
     .from("snapshots")
     .insert([{ farm_type: farmType, title }])
     .select()
     .single();
-  if (error) throw new Error(error.message);
-  return { message: "Saved successfully", snapshot: data };
+
+  if (snapshotError) throw new Error(snapshotError.message);
+  const snapshotId = snapshotData.id;
+
+  // 2. 現在の plants テーブルから該当する farmType のデータを取得
+  const { data: plantsData, error: plantsError } = await supabase
+    .from("plants")
+    .select("*")
+    .eq("farmType", farmType);
+
+  if (plantsError) throw new Error(plantsError.message);
+
+  // 3. 取得した植物データを snapshot_items テーブル用に整形して一括挿入
+  if (plantsData && plantsData.length > 0) {
+    const snapshotItems = plantsData.map((plant: any) => ({
+      snapshot_id: snapshotId,
+      name: plant.name ?? "",
+      type: plant.type ?? "種",
+      icon: plant.icon ?? "",
+      memo: plant.memo ?? "",
+      planted_date: plant.planted_date ?? null,
+      harvest_date: plant.harvest_date ?? null,
+      farm_type: plant.farmType ?? farmType,
+      grid_position: plant.gridPosition ?? null,
+      is_archived: plant.isArchived ?? false,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from("snapshot_items")
+      .insert(snapshotItems);
+
+    if (itemsError) throw new Error(itemsError.message);
+  }
+
+  return { message: "Saved successfully", snapshot: snapshotData };
 };
 
 // スナップショットの一覧を取得する
