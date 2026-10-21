@@ -6,7 +6,7 @@ import snapshotsRouter from "./routes/snapshots"; // スナップショットの
 const app = express();
 
 app.use(cors());
-app.use(express.json()); // ★これが無いとデータを受け取れない
+app.use(express.json()); 
 
 app.use("/api/plants", plantsRouter);
 app.use("/api/snapshots", snapshotsRouter); // スナップショットのAPIのエンドポイントを登録
