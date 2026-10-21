@@ -16,6 +16,41 @@ export interface Snapshot {
 }
 
 // ==========================================
+// データベースの形 ➔ 画面の形 に変換する関数
+// ==========================================
+const mapFromDb = (item: any): Plant => {
+  return {
+    id: item.id,
+    name: item.name,
+    type: item.type,
+    icon: item.icon,
+    plantedDate: item.planted_date,
+    harvestDate: item.harvest_date,
+    memo: item.memo,
+    farmType: item.farm_type,
+    isArchived: item.is_archived,
+    gridPosition: item.grid_position,
+  };
+};
+
+// ==========================================
+// 画面の形 ➔ データベースの形 に変換する関数
+// ==========================================
+const mapToDb = (plant: Partial<Plant>) => {
+  return {
+    name: plant.name,
+    type: plant.type,
+    icon: plant.icon,
+    planted_date: plant.plantedDate, // 画面の形をデータベースの形（アンダーバー付き）に
+    harvest_date: plant.harvestDate,
+    memo: plant.memo,
+    farm_type: plant.farmType,
+    is_archived: plant.isArchived,
+    grid_position: plant.gridPosition,
+  };
+};
+
+// ==========================================
 // 作物（Plant / Box）関連のAPI
 // ==========================================
 
@@ -23,7 +58,7 @@ export interface Snapshot {
 export const getPlants = async (): Promise<Plant[]> => {
   const { data, error } = await supabase.from("plants").select("*");
   if (error) throw new Error(error.message);
-  return data || [];
+  return (data || []).map(mapFromDb);
 };
 
 // 作物を1件取得
@@ -34,40 +69,48 @@ export const getPlant = async (id: string): Promise<Plant> => {
     .eq("id", id)
     .single();
   if (error) throw new Error(error.message);
-  return data;
+  return mapFromDb(data);
 };
 
 // 作物を新規登録
 export const createPlant = async (plant: Omit<Plant, "id">): Promise<Plant> => {
+  const dbData = mapToDb(plant);
   const { data, error } = await supabase
     .from("plants")
-    .insert([plant])
+    .insert([dbData])
     .select()
     .single();
   if (error) throw new Error(error.message);
-  return data;
+  return mapFromDb(data);
 };
 
 // 作物をまとめて登録（初期の空Box作成用など）
-export const createPlants = async (plants: Omit<Plant, "id">[]): Promise<Plant[]> => {
+export const createPlants = async (
+  plants: Omit<Plant, "id">[],
+): Promise<Plant[]> => {
+  const dbDataArray = plants.map(mapToDb);
   const { data, error } = await supabase
     .from("plants")
-    .insert(plants)
+    .insert(dbDataArray)
     .select();
   if (error) throw new Error(error.message);
-  return data || [];
+  return (data || []).map(mapFromDb);
 };
 
 // 作物を更新
-export const updatePlant = async (id: string, plant: Partial<Omit<Plant, "id">>): Promise<Plant> => {
+export const updatePlant = async (
+  id: string,
+  plant: Partial<Omit<Plant, "id">>,
+): Promise<Plant> => {
+  const dbData = mapToDb(plant);
   const { data, error } = await supabase
     .from("plants")
-    .update(plant)
+    .update(dbData)
     .eq("id", id)
     .select()
     .single();
   if (error) throw new Error(error.message);
-  return data;
+  return mapFromDb(data);
 };
 
 // 作物を削除
@@ -100,11 +143,13 @@ export const getSnapshots = async (): Promise<Snapshot[]> => {
 };
 
 // 特定のスナップショットのアイテム一覧を取得する
-export const getSnapshotItems = async (snapshotId: number): Promise<Plant[]> => {
+export const getSnapshotItems = async (
+  snapshotId: number,
+): Promise<Plant[]> => {
   const { data, error } = await supabase
     .from("snapshot_items")
     .select("*")
     .eq("snapshot_id", snapshotId);
   if (error) throw new Error(error.message);
-  return data || [];
+  return (data || []).map(mapFromDb);
 };
