@@ -29,7 +29,7 @@ const mapFromDb = (item: any): Plant => {
     memo: item.memo,
     farmType: item.farmType,
     isArchived: item.isArchived,
-    gridPosition: item.gridPosition,
+    gridPosition: item.gridPosition || item.grid_position,
   };
 };
 
