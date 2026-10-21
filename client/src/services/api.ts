@@ -27,9 +27,9 @@ const mapFromDb = (item: any): Plant => {
     plantedDate: item.planted_date,
     harvestDate: item.harvest_date,
     memo: item.memo,
-    farmType: item.farm_type,
-    isArchived: item.is_archived,
-    gridPosition: item.grid_position,
+    farmType: item.farmType,
+    isArchived: item.isArchived,
+    gridPosition: item.gridPosition,
   };
 };
 
