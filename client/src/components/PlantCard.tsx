@@ -284,6 +284,7 @@ export const PlantCard: React.FC<Props> = ({
                         alignItems: "center",
                         gap: "6px",
                         maxWidth: "100%",
+                        width: "100%",
                       }}
                     >
                       {plant.icon && (
@@ -291,15 +292,15 @@ export const PlantCard: React.FC<Props> = ({
                       )}
                       <span
                         style={{
-                          fontWeight: "bold",
-                          fontSize: "14px",
-                          color: "#333",
+                          fontWeight: plant.name ? "bold" : "normal",
+                          fontSize: plant.name ? "14px" : "13px",
+                          color: plant.name ? "#333" : "#aaa",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {plant.name}
+                        {plant.name || "空Box"}
                       </span>
                     </div>
                   ) : (
