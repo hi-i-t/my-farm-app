@@ -69,6 +69,8 @@ const footerButtonStyle: React.CSSProperties = {
   flex: 1,
   padding: "8px 0",
   fontSize: "12px",
+  color: "#000000",      // 文字を黒に指定
+  fontWeight: "bold",    // 文字を太字にして見やすくする
   border: "1px solid #aaa",
   borderRadius: "4px",
   backgroundColor: "#fff",
@@ -132,7 +134,6 @@ export const PlantCard: React.FC<Props> = ({
   };
 
   const handleClick = (plant: Plant, event: React.MouseEvent) => {
-    event.preventDefault();
     if (event.timeStamp - lastDragEndRef.current < 300) return;
     onSelectBox(plant);
   };
@@ -271,7 +272,7 @@ export const PlantCard: React.FC<Props> = ({
                   key={plant.id}
                   onClick={(e) => handleClick(plant, e)}
                   // 🌟 タップ終了時にクリックと同じ処理を安全に呼び出す
-                  onTouchEnd={(e) => {
+                  onPointerUp={(e) => {
                     if (e.timeStamp - lastDragEndRef.current < 300) return;
                     onSelectBox(plant);
                   }}

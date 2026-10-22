@@ -36,7 +36,7 @@ export const FarmPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ★ 追加：過去のスナップショット閲覧中かどうか、および選択中のタイトル
+  // 過去のスナップショット閲覧中かどうか、および選択中のタイトル
   const [selectedSnapshotTitle, setSelectedSnapshotTitle] = useState<
     string | null
   >(null);

@@ -17,7 +17,7 @@ export const TopPage: React.FC = () => {
       }}
     >
       {/* 🥕 人参とお花 🌸 で挟む */}
-      <h1>
+      <h1 style={{ color: "#000" }}>
         <span style={{ marginRight: "10px" }}>🥕</span>
         そだてこファーム
         <span style={{ marginLeft: "10px" }}>🌸</span>
