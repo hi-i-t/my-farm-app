@@ -426,11 +426,14 @@ export const PlantCard: React.FC<Props> = ({
                         width: "100%",
                         padding: "10px",
                         textAlign: "left",
-                        backgroundColor: "#f5f5f5",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
+                        backgroundColor: "#ffffff", // 背景を白に固定
+                        color: "#000000", // 文字色を黒に固定
+                        WebkitTextFillColor: "#000000", // スマホの白飛び・強制反転を完全にブロック
+                        border: "1px solid #ccc",
+                        borderRadius: "6px",
                         cursor: "pointer",
-                        fontSize: "13px",
+                        fontSize: "14px",
+                        fontWeight: "bold", // 太字にして読みやすくする
                       }}
                     >
                       {snap.title}
