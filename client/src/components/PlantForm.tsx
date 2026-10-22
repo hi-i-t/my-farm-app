@@ -175,11 +175,12 @@ export const PlantForm: React.FC<Props> = ({
             }}
           >
             {plantOptions.map((opt) => (
-              <option key={opt.name} 
-              value={opt.name}
-              style={{
+              <option
+                key={opt.name}
+                value={opt.name}
+                style={{
                   backgroundColor: "#ffffff", // 選択肢の背景を白に固定
-                  color: "#000000",           // 選択肢の文字を黒に固定
+                  color: "#000000", // 選択肢の文字を黒に固定
                 }}
               >
                 {opt.icon ? `${opt.icon} ` : ""} {opt.name}
@@ -234,6 +235,12 @@ export const PlantForm: React.FC<Props> = ({
                   onChange={(e) =>
                     setType(e.target.value as "種" | "苗" | "球根")
                   }
+                  style={{
+                    accentColor: "#52c41a", // 選択されたときのラジオボタンの色を緑に固定（黒潰れ防止）
+                    width: "16px",
+                    height: "16px",
+                    cursor: "pointer",
+                  }}
                 />
                 {t}
               </label>
