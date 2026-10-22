@@ -35,6 +35,7 @@ const buildLayout = (plants: Plant[]): LayoutItem[] => {
       p.gridPosition ? Math.max(max, p.gridPosition.y + p.gridPosition.h) : max,
     0,
   );
+
   let unplacedIndex = 0;
 
   return plants.map((plant) => {
@@ -55,6 +56,7 @@ const buildLayout = (plants: Plant[]): LayoutItem[] => {
         ...constraints,
       };
     }
+
     const x = unplacedIndex % COLS;
     const item = { i: plant.id!, x, y: nextY, w: 1, h: 1, ...constraints };
     unplacedIndex++;
@@ -88,6 +90,7 @@ export const PlantCard: React.FC<Props> = ({
   onLoadSnapshot,
 }) => {
   const { width, containerRef, mounted } = useContainerWidth();
+
   // ドラッグ直後に発生するクリックで詳細画面へ飛ばないようにする
   const lastDragEndRef = useRef(0);
 
@@ -138,6 +141,7 @@ export const PlantCard: React.FC<Props> = ({
     try {
       setModalLoading(true);
       const data = await getSnapshots();
+
       // 現在のファームタイプ（spring / autumn）に一致するものだけ、あるいは全部表示するなどお好みで
       // ここでは全件取得してリスト化します
       setSnapshotsList(data);
@@ -154,7 +158,6 @@ export const PlantCard: React.FC<Props> = ({
     <div
       style={{
         width: "100%",
-
         padding: "15px",
         backgroundColor: farmType === "spring" ? "#eef7ee" : "#fdf3e7",
         minHeight: "100vh",
@@ -212,11 +215,13 @@ export const PlantCard: React.FC<Props> = ({
           </button>
         </div>
       </div>
+
       {error && (
         <p style={{ color: "#d32f2f", fontSize: "13px", margin: "0 0 8px" }}>
           {error}
         </p>
       )}
+
       {/* メインエリア */}
       <div
         ref={containerRef}
@@ -233,9 +238,11 @@ export const PlantCard: React.FC<Props> = ({
         {loading && plants.length === 0 && (
           <p style={{ color: "#aaa", textAlign: "center" }}>読み込み中…</p>
         )}
+
         {!loading && plants.length === 0 && (
           <p style={{ color: "#aaa", textAlign: "center" }}>Boxがありません</p>
         )}
+
         {mounted && (
           <ReactGridLayout
             layout={layout}
@@ -250,6 +257,7 @@ export const PlantCard: React.FC<Props> = ({
             }}
             resizeConfig={{
               // 過去データ閲覧時以外はリサイズを有効にする
+
               enabled: !showArchived,
             }}
             onDragStop={handleDragStop}
@@ -277,42 +285,39 @@ export const PlantCard: React.FC<Props> = ({
                     overflow: "hidden",
                   }}
                 >
-                  {plant.name ? (
-                    <div
+                  {/* 🌟 どんな状態（空Box・データあり）でも、親の枠組みを常に同じ構造に統一します */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      maxWidth: "100%",
+                      width: "100%",
+                    }}
+                  >
+                    {plant.icon && (
+                      <span style={{ fontSize: "18px" }}>{plant.icon}</span>
+                    )}
+                    <span
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        maxWidth: "100%",
-                        width: "100%",
+                        fontWeight: plant.name ? "bold" : "normal",
+                        fontSize: plant.name ? "14px" : "13px",
+                        color: plant.name ? "#333" : "#aaa",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      {plant.icon && (
-                        <span style={{ fontSize: "18px" }}>{plant.icon}</span>
-                      )}
-                      <span
-                        style={{
-                          fontWeight: plant.name ? "bold" : "normal",
-                          fontSize: plant.name ? "14px" : "13px",
-                          color: plant.name ? "#333" : "#aaa",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {plant.name || "空Box"}
-                      </span>
-                    </div>
-                  ) : (
-                    <span style={{ color: "#aaa", fontSize: "13px" }}>
-                      空Box
+                      {plant.name || "空Box"}
                     </span>
-                  )}
+                  </div>
                 </div>
               ))}
           </ReactGridLayout>
         )}
       </div>
+
       {/* フッター */}
       <div
         style={{
@@ -325,6 +330,7 @@ export const PlantCard: React.FC<Props> = ({
         <button onClick={onGoToTop} style={footerButtonStyle}>
           終了
         </button>
+
         <button
           onClick={onAddBox}
           disabled={showArchived}
@@ -336,6 +342,7 @@ export const PlantCard: React.FC<Props> = ({
         >
           BOXを追加
         </button>
+
         <button
           onClick={() =>
             onSwitchFarm(farmType === "spring" ? "autumn" : "spring")
@@ -345,6 +352,7 @@ export const PlantCard: React.FC<Props> = ({
           {farmType === "spring" ? "秋ファームへ" : "春ファームへ"}
         </button>
       </div>
+
       {isModalOpen && (
         <div
           style={{
@@ -375,12 +383,14 @@ export const PlantCard: React.FC<Props> = ({
             <h3 style={{ marginTop: 0, fontSize: "1.1rem" }}>
               過去のファームデータ
             </h3>
+
             {modalLoading && <p>読み込み中...</p>}
             {!modalLoading && snapshotsList.length === 0 && (
               <p style={{ color: "#666", fontSize: "14px" }}>
                 保存されたデータはありません。
               </p>
             )}
+
             {!modalLoading && snapshotsList.length > 0 && (
               <ul
                 style={{ listStyle: "none", padding: 0, margin: "10px 0 20px" }}
@@ -392,6 +402,7 @@ export const PlantCard: React.FC<Props> = ({
                         if (onLoadSnapshot) {
                           onLoadSnapshot(snap.id, snap.title);
                         }
+
                         setIsModalOpen(false);
                       }}
                       style={{
@@ -411,6 +422,7 @@ export const PlantCard: React.FC<Props> = ({
                 ))}
               </ul>
             )}
+
             <button
               onClick={() => setIsModalOpen(false)}
               style={{
