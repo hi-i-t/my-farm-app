@@ -223,10 +223,16 @@ export const PlantForm: React.FC<Props> = ({
 
         {/* タイプ (ラジオボタン) */}
         <div style={{ marginBottom: "15px" }}>
-          <label>タイプ :</label>
+          <label style={{ color: "#000000", WebkitTextFillColor: "#000000" }}>タイプ :</label>
           <div style={{ display: "flex", gap: "15px", marginTop: "5px" }}>
             {["種", "苗", "球根"].map((t) => (
-              <label key={t}>
+              <label key={t}
+              style={{
+              color: "#000000",                // 文字を黒に固定
+                  WebkitTextFillColor: "#000000",  // スマホの白飛び防止
+                  cursor: "pointer"
+            }}
+              >
                 <input
                   type="radio"
                   name="plantType"
