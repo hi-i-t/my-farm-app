@@ -175,7 +175,13 @@ export const PlantForm: React.FC<Props> = ({
             }}
           >
             {plantOptions.map((opt) => (
-              <option key={opt.name} value={opt.name}>
+              <option key={opt.name} 
+              value={opt.name}
+              style={{
+                  backgroundColor: "#ffffff", // 選択肢の背景を白に固定
+                  color: "#000000",           // 選択肢の文字を黒に固定
+                }}
+              >
                 {opt.icon ? `${opt.icon} ` : ""} {opt.name}
               </option>
             ))}

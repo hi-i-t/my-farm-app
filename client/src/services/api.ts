@@ -24,7 +24,7 @@ const mapFromDb = (item: any): Plant => {
     name: item.name,
     type: item.type,
     icon: item.icon,
-   // 日付もアンダーバーあり・なし両方に対応
+    // 日付もアンダーバーあり・なし両方に対応
     plantedDate: item.planted_date || item.plantedDate || "",
     harvestDate: item.harvest_date || item.harvestDate || "",
     memo: item.memo,
