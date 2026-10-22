@@ -223,15 +223,18 @@ export const PlantForm: React.FC<Props> = ({
 
         {/* タイプ (ラジオボタン) */}
         <div style={{ marginBottom: "15px" }}>
-          <label style={{ color: "#000000", WebkitTextFillColor: "#000000" }}>タイプ :</label>
+          <label style={{ color: "#000000", WebkitTextFillColor: "#000000" }}>
+            タイプ :
+          </label>
           <div style={{ display: "flex", gap: "15px", marginTop: "5px" }}>
             {["種", "苗", "球根"].map((t) => (
-              <label key={t}
-              style={{
-              color: "#000000",                // 文字を黒に固定
-                  WebkitTextFillColor: "#000000",  // スマホの白飛び防止
-                  cursor: "pointer"
-            }}
+              <label
+                key={t}
+                style={{
+                  color: "#000000", // 文字を黒に固定
+                  WebkitTextFillColor: "#000000", // スマホの白飛び防止
+                  cursor: "pointer",
+                }}
               >
                 <input
                   type="radio"
@@ -243,6 +246,8 @@ export const PlantForm: React.FC<Props> = ({
                   }
                   style={{
                     accentColor: "#52c41a", // 選択されたときのラジオボタンの色を緑に固定（黒潰れ防止）
+                    backgroundColor: "#ffffff", // 背景を白に指定
+                    color: "#52c41a", //
                     width: "16px",
                     height: "16px",
                     cursor: "pointer",
