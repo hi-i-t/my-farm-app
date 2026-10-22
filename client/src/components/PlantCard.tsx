@@ -283,6 +283,9 @@ export const PlantCard: React.FC<Props> = ({
                     padding: "4px 8px",
                     boxSizing: "border-box",
                     overflow: "hidden",
+                    // 🌟 スマホでのタップ反応を良くする
+                    touchAction: "manipulation",
+                    WebkitTapHighlightColor: "transparent",
                   }}
                 >
                   {/* 🌟 どんな状態（空Box・データあり）でも、親の枠組みを常に同じ構造に統一します */}
@@ -303,7 +306,8 @@ export const PlantCard: React.FC<Props> = ({
                       style={{
                         fontWeight: plant.name ? "bold" : "normal",
                         fontSize: plant.name ? "14px" : "13px",
-                        color: plant.name ? "#333" : "#aaa",
+                        // スマホの自動反転で白飛びしないよう、少しはっきりした色に変更
+                        color: plant.name ? "#111827" : "#4b5563",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
