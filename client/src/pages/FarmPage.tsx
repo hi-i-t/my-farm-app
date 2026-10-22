@@ -220,8 +220,9 @@ export const FarmPage: React.FC = () => {
         <div
           style={{
             width: "100%",
-
             backgroundColor: "#fef08a",
+            color: "#000000",                // 文字色を黒に固定
+            WebkitTextFillColor: "#000000",  // スマホの白飛びを防止
             padding: "10px 15px",
             boxSizing: "border-box",
             display: "flex",
@@ -230,7 +231,7 @@ export const FarmPage: React.FC = () => {
             gap: "8px",
             fontSize: "13px",
             fontWeight: "bold",
-            borderRadius: "0 0 8px 8px", // 下側の角を丸くするとカードと馴染みます
+            borderRadius: "0 0 8px 8px", // 下側の角を丸くする
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           }}
         >
@@ -240,10 +241,13 @@ export const FarmPage: React.FC = () => {
             style={{
               padding: "5px 12px",
               backgroundColor: "#fff",
+              color: "#000000",                // ボタンの文字を黒に固定
+              WebkitTextFillColor: "#000000",  // スマホの白飛びを防止
               border: "1px solid #ccc",
               borderRadius: "4px",
               cursor: "pointer",
               fontSize: "12px",
+              fontWeight: "bold",              // 太字で見やすく
             }}
           >
             現在のファームに戻る
