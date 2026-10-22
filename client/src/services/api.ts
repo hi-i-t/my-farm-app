@@ -24,12 +24,14 @@ const mapFromDb = (item: any): Plant => {
     name: item.name,
     type: item.type,
     icon: item.icon,
-    plantedDate: item.planted_date,
-    harvestDate: item.harvest_date,
+   // 日付もアンダーバーあり・なし両方に対応
+    plantedDate: item.planted_date || item.plantedDate || "",
+    harvestDate: item.harvest_date || item.harvestDate || "",
     memo: item.memo,
-    farmType: item.farmType,
-    isArchived: item.isArchived,
-    gridPosition: item.gridPosition || item.grid_position,
+    // ファームタイプも両方に対応
+    farmType: item.farm_type || item.farmType,
+    isArchived: item.is_archived || item.isArchived,
+    gridPosition: item.grid_position || item.gridPosition,
   };
 };
 
