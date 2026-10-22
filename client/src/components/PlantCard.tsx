@@ -132,6 +132,7 @@ export const PlantCard: React.FC<Props> = ({
   };
 
   const handleClick = (plant: Plant, event: React.MouseEvent) => {
+    event.preventDefault();
     if (event.timeStamp - lastDragEndRef.current < 300) return;
     onSelectBox(plant);
   };
