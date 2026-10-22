@@ -69,8 +69,8 @@ const footerButtonStyle: React.CSSProperties = {
   flex: 1,
   padding: "8px 0",
   fontSize: "12px",
-  color: "#000000",      // 文字を黒に指定
-  fontWeight: "bold",    // 文字を太字にして見やすくする
+  color: "#000000", // 文字を黒に指定
+  fontWeight: "bold", // 文字を太字にして見やすくする
   border: "1px solid #aaa",
   borderRadius: "4px",
   backgroundColor: "#fff",
@@ -206,11 +206,17 @@ export const PlantCard: React.FC<Props> = ({
             onClick={handleOpenSnapshotModal}
             style={{
               backgroundColor: "#ffffff",
-              border: "1px solid #ccc",
+              color: "#000000", // 文字色（黒）
+              fontWeight: "bold", // 太字
+              border: "1px solid #999",
               padding: "5px 10px",
               borderRadius: "4px",
               fontSize: "12px",
               cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              WebkitTextFillColor: "#000000", // スマホ（特にiOS/一部Android）の強制文字色変更を防ぐ
             }}
           >
             過去のデータ
