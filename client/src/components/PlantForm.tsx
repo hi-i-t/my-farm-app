@@ -163,7 +163,16 @@ export const PlantForm: React.FC<Props> = ({
           <select
             value={name}
             onChange={handleSelectChange}
-            style={{ width: "100%", padding: "8px" }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              backgroundColor: "#ffffff", // 白背景に固定
+              color: "#000000", // 黒文字に固定
+              WebkitTextFillColor: "#000000", // スマホでの白飛び防止
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              boxSizing: "border-box",
+            }}
           >
             {plantOptions.map((opt) => (
               <option key={opt.name} value={opt.name}>
@@ -191,7 +200,16 @@ export const PlantForm: React.FC<Props> = ({
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder="名称を入力してください"
-              style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                backgroundColor: "#ffffff", // 白背景に固定
+                color: "#000000", // 黒文字に固定
+                WebkitTextFillColor: "#000000", // スマホでの白飛び防止
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                boxSizing: "border-box",
+              }}
             />
           </div>
         )}
@@ -226,7 +244,16 @@ export const PlantForm: React.FC<Props> = ({
             type="date"
             value={plantedDate}
             onChange={(e) => setPlantedDate(e.target.value)}
-            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              backgroundColor: "#ffffff", // 白背景に固定
+              color: "#000000", // 黒文字に固定
+              WebkitTextFillColor: "#000000", // スマホでの白飛び防止
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              boxSizing: "border-box",
+            }}
           />
         </div>
 
@@ -239,7 +266,16 @@ export const PlantForm: React.FC<Props> = ({
             type="date"
             value={harvestDate}
             onChange={(e) => setHarvestDate(e.target.value)}
-            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              backgroundColor: "#ffffff", // 白背景に固定
+              color: "#000000", // 黒文字に固定
+              WebkitTextFillColor: "#000000", // スマホでの白飛び防止
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              boxSizing: "border-box",
+            }}
           />
         </div>
 
@@ -252,7 +288,16 @@ export const PlantForm: React.FC<Props> = ({
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             rows={4}
-            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              backgroundColor: "#ffffff", // 白背景に固定
+              color: "#000000", // 黒文字に固定
+              WebkitTextFillColor: "#000000", // スマホでの白飛び防止
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              boxSizing: "border-box",
+            }}
           />
         </div>
 
