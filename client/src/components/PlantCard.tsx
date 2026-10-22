@@ -269,9 +269,8 @@ export const PlantCard: React.FC<Props> = ({
                 <div
                   key={plant.id}
                   onClick={(e) => handleClick(plant, e)}
-                  // スマホ専用のタッチ開始・終了を監視して確実に反応させる
+                  // 🌟 タップ終了時にクリックと同じ処理を安全に呼び出す
                   onTouchEnd={(e) => {
-                    e.preventDefault(); // スマホ特有の二重発火やバグを防ぐ
                     if (e.timeStamp - lastDragEndRef.current < 300) return;
                     onSelectBox(plant);
                   }}
