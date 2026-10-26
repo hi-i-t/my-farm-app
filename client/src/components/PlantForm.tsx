@@ -369,7 +369,8 @@ export const PlantForm: React.FC<Props> = ({
             type="button"
             onClick={onBack}
             style={{
-              backgroundColor: "#f0f0f0",
+              backgroundColor: "#5c636a",
+              color: "#FFF",
               border: "1px solid #ccc",
               padding: "8px 10px",
               borderRadius: "4px",
