@@ -251,6 +251,7 @@ export const PlantForm: React.FC<Props> = ({
                     width: "16px",
                     height: "16px",
                     cursor: "pointer",
+                    colorScheme: "light" as any, // ダークモード対策1
                   }}
                 />
                 {t}
