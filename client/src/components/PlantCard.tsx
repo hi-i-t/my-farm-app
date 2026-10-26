@@ -95,6 +95,9 @@ export const PlantCard: React.FC<Props> = ({
 
   // ドラッグ直後に発生するクリックで詳細画面へ飛ばないようにする
   const lastDragEndRef = useRef(0);
+  const pointerDownPosRef = useRef<
+    { x: number; y: number } | { x: number; y: number }
+  >({ x: 0, y: 0 }); // ★ 追加
 
   // ★過去データ一覧モーダルの開閉状態とリストデータ
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -131,11 +134,6 @@ export const PlantCard: React.FC<Props> = ({
       positions[i] = { x, y, w, h };
     });
     onLayoutSave(positions);
-  };
-
-  const handleClick = (plant: Plant, event: React.MouseEvent) => {
-    if (event.timeStamp - lastDragEndRef.current < 300) return;
-    onSelectBox(plant);
   };
 
   // ★ 「過去のデータ」ボタンが押されたとき：一覧を取得してモーダルを開く
@@ -276,10 +274,30 @@ export const PlantCard: React.FC<Props> = ({
               .map((plant) => (
                 <div
                   key={plant.id}
-                  onClick={(e) => handleClick(plant, e)}
-                  // 🌟 タップ終了時にクリックと同じ処理を安全に呼び出す
+                  // 1. タップし始めた位置を記録
+                  onPointerDown={(e) => {
+                    pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
+                  }}
+                  // 2. 指を離した時：動いていなくて、ドラッグ直後でなければ詳細画面へ
                   onPointerUp={(e) => {
-                    if (e.timeStamp - lastDragEndRef.current < 300) return;
+                    if (showArchived) return;
+                    if (e.timeStamp - lastDragEndRef.current < 500) return;
+
+                    const dx = Math.abs(
+                      e.clientX - pointerDownPosRef.current.x,
+                    );
+                    const dy = Math.abs(
+                      e.clientY - pointerDownPosRef.current.y,
+                    );
+                    if (dx < 5 && dy < 5) {
+                      onSelectBox(plant);
+                    }
+                  }}
+                  // 3. PCのマウスクリック対策用
+                  // 🌟 タップ終了時にクリックと同じ処理を安全に呼び出す
+                  onClick={(e) => {
+                    if (showArchived) return;
+                    if (e.timeStamp - lastDragEndRef.current < 500) return;
                     onSelectBox(plant);
                   }}
                   style={{
