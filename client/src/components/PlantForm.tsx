@@ -374,6 +374,7 @@ export const PlantForm: React.FC<Props> = ({
               padding: "8px 10px",
               borderRadius: "4px",
               cursor: "pointer",
+              touchAction: "manipulation", // スマホでのタップ遅延やタッチ判定の不具合を防ぐ
             }}
           >
             戻る
