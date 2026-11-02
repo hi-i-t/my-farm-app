@@ -4,6 +4,10 @@ import ReactGridLayout, {
   Layout,
   LayoutItem,
 } from "react-grid-layout";
+// 🌟 v2.2.4 の上詰め無効化モジュールをインポート
+//noCompactor をベースに衝突防止を有効にしたコンパクターを作成
+import { noCompactor } from "react-grid-layout/core";
+
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { FarmType, GridPosition, Plant } from "../types/plant";
@@ -26,19 +30,17 @@ interface Props {
 
 const COLS = 4;
 
+// 🌟 上詰めなし＋衝突防止
+// v2 では preventCollision は props ではなく compactor 側に持たせる必要がある
+// （他のBoxがある場所へは移動できず、押し出しも重なりも起きない）
+//noCompactor をベースに衝突防止を有効にしたコンパクターを作成
+const freeCompactor = { ...noCompactor, preventCollision: true };
+
 // gridPosition から React-Grid-Layout 用のレイアウトを作る
 // 位置が未保存のBox（null）は、配置済みBoxの下へ順番に並べる
 // レイアウトを計算して組み立てる
 const buildLayout = (plants: Plant[]): LayoutItem[] => {
-  let nextY = plants.reduce(
-    (max, p) =>
-      p.gridPosition ? Math.max(max, p.gridPosition.y + p.gridPosition.h) : max,
-    0,
-  );
-
-  let unplacedIndex = 0;
-
-  return plants.map((plant) => {
+  return plants.map((plant, index) => {
     // 共通のサイズ制限（最小幅1、最大幅4、最小高1、最大高2など）
     const constraints = {
       minW: 1,
@@ -50,18 +52,26 @@ const buildLayout = (plants: Plant[]): LayoutItem[] => {
     if (plant.gridPosition) {
       return {
         i: plant.id!,
-        ...plant.gridPosition,
+        x: plant.gridPosition.x,
+        y: plant.gridPosition.y,
         w: plant.gridPosition.w ?? 1,
         h: plant.gridPosition.h ?? 1,
         ...constraints,
       };
     }
 
-    const x = unplacedIndex % COLS;
-    const item = { i: plant.id!, x, y: nextY, w: 1, h: 1, ...constraints };
-    unplacedIndex++;
-    if (x === COLS - 1) nextY++;
-    return item;
+    // 位置が全くない初期状態のボックスだけ、左上から順番に並べる（勝手な上詰め計算はしない）
+    const x = index % COLS;
+    const y = Math.floor(index / COLS);
+
+    return {
+      i: plant.id!,
+      x,
+      y,
+      w: 1,
+      h: 1,
+      ...constraints,
+    };
   });
 };
 
@@ -114,6 +124,8 @@ export const PlantCard: React.FC<Props> = ({
     event: Event,
   ) => {
     lastDragEndRef.current = event.timeStamp;
+
+    // 衝突防止は freeCompactor が行うので、newLayout をそのまま保存すればよい
     const positions: Record<string, GridPosition> = {};
     newLayout.forEach(({ i, x, y, w, h }) => {
       positions[i] = { x, y, w, h };
@@ -253,6 +265,9 @@ export const PlantCard: React.FC<Props> = ({
           <ReactGridLayout
             layout={layout}
             width={width}
+            // 🌟 自動上詰めを無効化し、衝突防止を有効化
+            //freeCompactor を指定する
+            compactor={freeCompactor}
             gridConfig={{
               cols: COLS,
               rowHeight: 80,
