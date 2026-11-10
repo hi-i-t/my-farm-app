@@ -182,6 +182,19 @@ export const getSnapshots = async (): Promise<Snapshot[]> => {
   return data || [];
 };
 
+// 特定の farm_type のスナップショット一覧を取得する
+export const getSnapshotsByFarmType = async (
+  farmType: string,
+): Promise<Snapshot[]> => {
+  const { data, error } = await supabase
+    .from("snapshots")
+    .select("*")
+    .eq("farm_type", farmType)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data || [];
+};
+
 // 特定のスナップショットのアイテム一覧を取得する
 export const getSnapshotItems = async (
   snapshotId: number,

@@ -4,7 +4,7 @@ import ReactGridLayout, {
   Layout,
   LayoutItem,
 } from "react-grid-layout";
-// 🌟 v2.2.4 の上詰め無効化モジュールをインポート
+//  v2.2.4 の上詰め無効化モジュールをインポート
 //noCompactor をベースに衝突防止を有効にしたコンパクターを作成
 import { noCompactor } from "react-grid-layout/core";
 
@@ -16,6 +16,7 @@ import { getSnapshots, Snapshot } from "../services/api"; // スナップショ�
 interface Props {
   plants: Plant[]; // 表示するファームのBoxだけ渡す
   farmType: FarmType;
+  activeFarmType?: FarmType;
   showArchived: boolean;
   loading: boolean;
   error: string | null;
@@ -78,7 +79,7 @@ const buildLayout = (plants: Plant[]): LayoutItem[] => {
 const footerButtonStyle: React.CSSProperties = {
   flex: 1,
   padding: "8px 0",
-  fontSize: "12px",
+  fontSize: "16px", //ヘッダーフッターのフォントサイズ
   color: "#000000", // 文字を黒に指定
   fontWeight: "bold", // 文字を太字にして見やすくする
   border: "1px solid #aaa",
@@ -102,7 +103,11 @@ export const PlantCard: React.FC<Props> = ({
   onLoadSnapshot,
 }) => {
   const { width, containerRef, mounted } = useContainerWidth();
-
+  // 🌟 過去データ表示中で、かつ中身のデータに farmType があればそれを優先、通常時はURLの farmType を使う
+  const currentFarmType =
+    showArchived && plants.length > 0 && plants[0].farmType
+      ? plants[0].farmType
+      : farmType;
   // ドラッグ直後に発生するクリックで詳細画面へ飛ばないようにする
   const lastDragEndRef = useRef(0);
   const pointerDownPosRef = useRef<
@@ -152,9 +157,10 @@ export const PlantCard: React.FC<Props> = ({
   const handleOpenSnapshotModal = async () => {
     try {
       setModalLoading(true);
+      // 🌟 絞り込みをせず、すべての過去データを取得する関数を呼び出す
       const data = await getSnapshots();
 
-      // 現在のファームタイプ（spring / autumn）に一致するものだけ、あるいは全部表示するなどお好みで
+      // 現在のファームタイプ（spring / autumn）に一致するものだけ、あるいは全部表示するなど
       // ここでは全件取得してリスト化します
       setSnapshotsList(data);
       setIsModalOpen(true);
@@ -171,7 +177,8 @@ export const PlantCard: React.FC<Props> = ({
       style={{
         width: "100%",
         padding: "15px",
-        backgroundColor: farmType === "spring" ? "#eef7ee" : "#fdf3e7",
+        //  currentFarmType を使う
+        backgroundColor: currentFarmType === "spring" ? "#eef7ee" : "#fdf3e7",
         minHeight: "100vh",
         boxSizing: "border-box",
         boxShadow: "0 0 10px rgba(0,0,0,0.1)",
@@ -187,8 +194,9 @@ export const PlantCard: React.FC<Props> = ({
           marginBottom: "12px",
         }}
       >
-        <h2 style={{ margin: 0, fontSize: "1.2rem", color: "#333" }}>
-          {farmType === "spring" ? "春ファーム" : "秋ファーム"}{" "}
+        <h2 style={{ margin: 0, fontSize: "1.6rem", color: "#333" }}>
+          {/*  currentFarmType を使う */}
+          {currentFarmType === "spring" ? "春ファーム" : "秋ファーム"}{" "}
           {showArchived && "(過去データ)"}
         </h2>
 
@@ -351,7 +359,7 @@ export const PlantCard: React.FC<Props> = ({
                     <span
                       style={{
                         fontWeight: plant.name ? "bold" : "normal",
-                        fontSize: plant.name ? "14px" : "13px",
+                        fontSize: plant.name ? "16px" : "15px", //グリッド内フォントサイズ
                         // スマホの自動反転で白飛びしないよう、少しはっきりした色に変更
                         color: plant.name ? "#111827" : "#4b5563",
                         overflow: "hidden",
@@ -457,16 +465,24 @@ export const PlantCard: React.FC<Props> = ({
                       }}
                       style={{
                         width: "100%",
-                        padding: "10px",
+                        padding: "12px 14px",
                         textAlign: "left",
-                        backgroundColor: "#ffffff", // 背景を白に固定
-                        color: "#000000", // 文字色を黒に固定
-                        WebkitTextFillColor: "#000000", // スマホの白飛び・強制反転を完全にブロック
-                        border: "1px solid #ccc",
+
+                        // スマホ対策と白固定を維持しつつ、春と秋でわずかに色味を変える
+                        backgroundColor: "#ffffff",
+                        color: "#000000",
+                        WebkitTextFillColor: "#000000", // スマホの強制反転ブロック
+
+                        // 春か秋かに応じて枠の色を変えて分かりやすくする
+                        border: `2px solid ${snap.farm_type === "spring" ? "#81c784" : "#ffb74d"}`,
                         borderRadius: "6px",
                         cursor: "pointer",
-                        fontSize: "14px",
-                        fontWeight: "bold", // 太字にして読みやすくする
+                        fontSize: "15px", // フォントを少し大きく
+                        fontWeight: "bold",
+
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
                       }}
                     >
                       {snap.title}

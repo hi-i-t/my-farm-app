@@ -96,9 +96,13 @@ export const FarmPage: React.FC = () => {
     return <Navigate to="/farm/spring" replace />;
   }
 
-  const currentPlants = plants.filter(
-    (p) => p.farmType === farmType && !p.isArchived,
-  );
+  // 過去データ閲覧中（selectedSnapshotTitleがある）のときは、farmType での絞り込みを行わずにそのまま表示する
+  const currentPlants = plants.filter((p) => {
+    if (selectedSnapshotTitle) {
+      return true; // 過去データの中身はそのまま全部表示する
+    }
+    return p.farmType === farmType && !p.isArchived;
+  });
 
   // ドラッグで並べ替えたとき：位置が変わったBoxだけDBに保存する
   const handleLayoutSave = async (positions: Record<string, GridPosition>) => {
@@ -221,8 +225,8 @@ export const FarmPage: React.FC = () => {
           style={{
             width: "100%",
             backgroundColor: "#fef08a",
-            color: "#000000",                // 文字色を黒に固定
-            WebkitTextFillColor: "#000000",  // スマホの白飛びを防止
+            color: "#000000", // 文字色を黒に固定
+            WebkitTextFillColor: "#000000", // スマホの白飛びを防止
             padding: "10px 15px",
             boxSizing: "border-box",
             display: "flex",
@@ -241,13 +245,13 @@ export const FarmPage: React.FC = () => {
             style={{
               padding: "5px 12px",
               backgroundColor: "#fff",
-              color: "#000000",                // ボタンの文字を黒に固定
-              WebkitTextFillColor: "#000000",  // スマホの白飛びを防止
+              color: "#000000", // ボタンの文字を黒に固定
+              WebkitTextFillColor: "#000000", // スマホの白飛びを防止
               border: "1px solid #ccc",
               borderRadius: "4px",
               cursor: "pointer",
               fontSize: "12px",
-              fontWeight: "bold",              // 太字で見やすく
+              fontWeight: "bold", // 太字で見やすく
             }}
           >
             現在のファームに戻る
