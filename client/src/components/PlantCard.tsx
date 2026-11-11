@@ -31,7 +31,7 @@ interface Props {
 
 const COLS = 4;
 
-// 🌟 上詰めなし＋衝突防止
+// 上詰めなし＋衝突防止
 // v2 では preventCollision は props ではなく compactor 側に持たせる必要がある
 // （他のBoxがある場所へは移動できず、押し出しも重なりも起きない）
 //noCompactor をベースに衝突防止を有効にしたコンパクターを作成
@@ -103,7 +103,7 @@ export const PlantCard: React.FC<Props> = ({
   onLoadSnapshot,
 }) => {
   const { width, containerRef, mounted } = useContainerWidth();
-  // 🌟 過去データ表示中で、かつ中身のデータに farmType があればそれを優先、通常時はURLの farmType を使う
+  // 過去データ表示中で、かつ中身のデータに farmType があればそれを優先、通常時はURLの farmType を使う
   const currentFarmType =
     showArchived && plants.length > 0 && plants[0].farmType
       ? plants[0].farmType
@@ -157,11 +157,11 @@ export const PlantCard: React.FC<Props> = ({
   const handleOpenSnapshotModal = async () => {
     try {
       setModalLoading(true);
-      // 🌟 絞り込みをせず、すべての過去データを取得する関数を呼び出す
+      // 絞り込みをせず、すべての過去データを取得する関数を呼び出す
       const data = await getSnapshots();
 
       // 現在のファームタイプ（spring / autumn）に一致するものだけ、あるいは全部表示するなど
-      // ここでは全件取得してリスト化します
+      // 全件取得してリスト化します
       setSnapshotsList(data);
       setIsModalOpen(true);
     } catch (err) {
@@ -273,7 +273,7 @@ export const PlantCard: React.FC<Props> = ({
           <ReactGridLayout
             layout={layout}
             width={width}
-            // 🌟 自動上詰めを無効化し、衝突防止を有効化
+            // 自動上詰めを無効化し、衝突防止を有効化
             //freeCompactor を指定する
             compactor={freeCompactor}
             gridConfig={{
@@ -317,7 +317,7 @@ export const PlantCard: React.FC<Props> = ({
                     }
                   }}
                   // 3. PCのマウスクリック対策用
-                  // 🌟 タップ終了時にクリックと同じ処理を安全に呼び出す
+                  // タップ終了時にクリックと同じ処理を安全に呼び出す
                   onClick={(e) => {
                     if (showArchived) return;
                     if (e.timeStamp - lastDragEndRef.current < 500) return;
@@ -337,12 +337,12 @@ export const PlantCard: React.FC<Props> = ({
                     padding: "4px 8px",
                     boxSizing: "border-box",
                     overflow: "hidden",
-                    // 🌟 スマホでのタップ反応を良くする
+                    // スマホでのタップ反応を良くする
                     touchAction: "manipulation",
                     WebkitTapHighlightColor: "transparent",
                   }}
                 >
-                  {/* 🌟 どんな状態（空Box・データあり）でも、親の枠組みを常に同じ構造に統一します */}
+                  {/* どんな状態（空Box・データあり）でも、親の枠組みを常に同じ構造に統一します */}
                   <div
                     style={{
                       display: "flex",
@@ -474,7 +474,7 @@ export const PlantCard: React.FC<Props> = ({
                         WebkitTextFillColor: "#000000", // スマホの強制反転ブロック
 
                         // 春か秋かに応じて枠の色を変えて分かりやすくする
-                        border: `2px solid ${snap.farm_type === "spring" ? "#81c784" : "#ffb74d"}`,
+                        border: `4px solid ${snap.farm_type === "spring" ? "#81c784" : "#ffb74d"}`,
                         borderRadius: "6px",
                         cursor: "pointer",
                         fontSize: "15px", // フォントを少し大きく
